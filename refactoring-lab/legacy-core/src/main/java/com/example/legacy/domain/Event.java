@@ -2,7 +2,9 @@ package com.example.legacy.domain;
 
 import java.util.Date;
 
-public abstract class Event {
+public sealed abstract class Event
+        permits SalaryChangeEvent, DepartmentChangeEvent {
+
     private String employeeId;
     private Date at;
 
@@ -12,6 +14,8 @@ public abstract class Event {
     }
 
     public String getEmployeeId() { return employeeId; }
+
     public Date getAt() { return at; }
+
     public abstract String getType();
 }
