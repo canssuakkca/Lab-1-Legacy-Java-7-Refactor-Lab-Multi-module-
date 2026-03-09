@@ -2,7 +2,8 @@ package com.example.legacy.domain;
 
 import java.util.Date;
 
-public class SalaryChangeEvent extends Event {
+public final class SalaryChangeEvent extends Event {
+
     private double delta;
 
     public SalaryChangeEvent(String employeeId, Date at, double delta) {
@@ -10,7 +11,12 @@ public class SalaryChangeEvent extends Event {
         this.delta = delta;
     }
 
-    public double getDelta() { return delta; }
+    public double getDelta() {
+        return delta;
+    }
 
-    public String getType() { return "SALARY_CHANGE"; }
+    @Override
+    public String getType() {
+        return "SALARY_CHANGE";
+    }
 }
