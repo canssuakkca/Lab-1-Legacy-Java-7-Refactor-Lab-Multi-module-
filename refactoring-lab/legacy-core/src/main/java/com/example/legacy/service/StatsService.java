@@ -1,6 +1,7 @@
 package com.example.legacy.service;
 
 import java.util.*;
+import java.util.stream.*;
 
 import com.example.legacy.domain.Employee;
 import com.example.legacy.util.StringUtils;
@@ -8,36 +9,33 @@ import com.example.legacy.util.StringUtils;
 public class StatsService {
 
     public Map<String, Object> buildStats(List<Employee> employees) {
-        Map<String, Object> stats = new HashMap<String, Object>();
+        Map<String, Object> stats = new HashMap<>();
 
-        int count = 0;
-        double totalSalary = 0;
-        Employee max = null;
+        List<Employee> validEmployees = employees.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
-        Map<String, Integer> byDept = new HashMap<String, Integer>();
+        double totalSalary = validEmployees.stream()
+                .mapToDouble(Employee::getSalary)
+                .sum();
 
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
-            if (e == null) continue;
-            count++;
-            totalSalary += e.getSalary();
+        double avgSalary = validEmployees.isEmpty() ? 0 : totalSalary / validEmployees.size();
 
-            if (max == null || e.getSalary() > max.getSalary()) {
-                max = e;
-            }
+        Employee maxSalaryEmployee = validEmployees.stream()
+                .max(Comparator.comparingDouble(Employee::getSalary))
+                .orElse(null);
 
-            String dept = e.getDepartment();
-            if (StringUtils.isBlank(dept)) dept = "UNKNOWN";
-            Integer current = byDept.get(dept);
-            if (current == null) current = Integer.valueOf(0);
-            byDept.put(dept, Integer.valueOf(current.intValue() + 1));
-        }
+        Map<String, Long> byDepartment = validEmployees.stream()
+                .collect(Collectors.groupingBy(
+                        e -> StringUtils.isBlank(e.getDepartment()) ? "UNKNOWN" : e.getDepartment(),
+                        Collectors.counting()
+                ));
 
-        stats.put("count", Integer.valueOf(count));
-        stats.put("totalSalary", Double.valueOf(totalSalary));
-        stats.put("avgSalary", count == 0 ? Double.valueOf(0) : Double.valueOf(totalSalary / count));
-        stats.put("maxSalaryEmployee", max);
-        stats.put("byDepartment", byDept);
+        stats.put("count", validEmployees.size());
+        stats.put("totalSalary", totalSalary);
+        stats.put("avgSalary", avgSalary);
+        stats.put("maxSalaryEmployee", maxSalaryEmployee);
+        stats.put("byDepartment", byDepartment);
 
         return stats;
     }
