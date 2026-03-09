@@ -1,6 +1,7 @@
 package com.example.legacy.domain;
 
 import com.example.legacy.annotations.Column;
+import java.util.Objects;
 
 public class Employee {
 
@@ -25,7 +26,8 @@ public class Employee {
     @Column(name = "birth_year")
     private int birthYear;
 
-    public Employee() {}
+    public Employee() {
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -49,12 +51,17 @@ public class Employee {
     public void setBirthYear(int birthYear) { this.birthYear = birthYear; }
 
     public String getFullName() {
-        String fn = firstName == null ? "" : firstName;
-        String ln = lastName == null ? "" : lastName;
-        return (fn + " " + ln).trim();
+        return String.format("%s %s",
+                Objects.toString(firstName, ""),
+                Objects.toString(lastName, "")
+        ).trim();
     }
 
+    @Override
     public String toString() {
-        return "Employee{id='" + id + "', name='" + getFullName() + "', dept='" + department + "', salary=" + salary + "}";
+        return String.format(
+                "Employee{id='%s', name='%s', dept='%s', salary=%.2f}",
+                id, getFullName(), department, salary
+        );
     }
 }
