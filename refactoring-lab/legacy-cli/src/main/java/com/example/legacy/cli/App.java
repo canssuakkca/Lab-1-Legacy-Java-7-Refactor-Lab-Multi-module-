@@ -7,53 +7,53 @@ import com.example.legacy.repository.InMemoryEmployeeRepository;
 import com.example.legacy.service.*;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public class App {
 
     public static void main(String[] args) throws Exception {
+
         if (args == null || args.length < 2) {
             System.out.println("Usage: java -jar legacy-cli.jar <employees.csv> <events.csv>");
             System.exit(2);
         }
 
-        final File employeesFile = new File(args[0]);
-        final File eventsFile = new File(args[1]);
+        File employeesFile = new File(args[0]);
+        File eventsFile = new File(args[1]);
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
 
-        Future<List<Employee>> employeesFuture = pool.submit(new Callable<List<Employee>>() {
-            public List<Employee> call() throws Exception {
-                ReflectionCsvMapper mapper = new ReflectionCsvMapper();
-                return mapper.read(employeesFile, Employee.class);
-            }
-        });
+        ReflectionCsvMapper mapper = new ReflectionCsvMapper();
+        EventParser eventParser = new EventParser();
+        EmployeeService employeeService = new EmployeeService();
+        StatsService statsService = new StatsService();
+        ReportService reportService = new ReportService();
 
-        Future<List<Event>> eventsFuture = pool.submit(new Callable<List<Event>>() {
-            public List<Event> call() throws Exception {
-                return new EventParser().readEvents(eventsFile);
-            }
-        });
+        Future<List<Employee>> employeesFuture =
+                pool.submit(() -> mapper.read(employeesFile, Employee.class));
+
+        Future<List<Event>> eventsFuture =
+                pool.submit(() -> eventParser.readEvents(eventsFile));
 
         List<Employee> employees = employeesFuture.get();
         List<Event> events = eventsFuture.get();
 
         EmployeeRepository repo = new InMemoryEmployeeRepository();
-        for (int i = 0; i < employees.size(); i++) {
-            repo.save(employees.get(i));
-        }
+        employees.forEach(repo::save);
 
-        new EmployeeService().applyEvents(employees, events);
+        employeeService.applyEvents(employees, events);
 
-        Map<String,Object> stats = new StatsService().buildStats(employees);
+        Map<String, Object> stats = statsService.buildStats(employees);
 
         System.out.println("Employees: " + stats.get("count"));
         System.out.println("Avg salary: " + stats.get("avgSalary"));
         System.out.println("By dept: " + stats.get("byDepartment"));
 
         File out = new File("report.xml");
-        new ReportService().writeReport(out, employees, stats);
+        reportService.writeReport(out, employees, stats);
+
         System.out.println("Report written: " + out.getAbsolutePath());
 
         pool.shutdown();
