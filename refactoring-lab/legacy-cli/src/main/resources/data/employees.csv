@@ -1,0 +1,6 @@
+id,first_name,last_name,department,salary,email,birth_year
+1,Ada,Lovelace,AI,120000,ada@example.com,1815
+2,Alan,Turing,AI,140000,alan@example.com,1912
+3,Grace,Hopper,DATA,130000,grace@example.com,1906
+4,Linus,Torvalds,PLATFORM,150000,linus@example.com,1969
+5,Joan,Clarke,SECURITY,125000,joan@example.com,1917
