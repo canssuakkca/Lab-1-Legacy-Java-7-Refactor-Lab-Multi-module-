@@ -1,34 +1,31 @@
 package com.example.legacy.repository;
 
 import java.util.*;
-
+import java.util.concurrent.CopyOnWriteArrayList;
 import com.example.legacy.domain.Employee;
 
 public class InMemoryEmployeeRepository implements EmployeeRepository {
 
-    private final List<Employee> store = new ArrayList<Employee>();
+    private final List<Employee> store = new CopyOnWriteArrayList<>();
 
+    @Override
     public void save(Employee employee) {
         if (employee == null || employee.getId() == null) return;
-        for (int i = 0; i < store.size(); i++) {
-            if (employee.getId().equals(store.get(i).getId())) {
-                store.set(i, employee);
-                return;
-            }
-        }
+        
+        store.removeIf(e -> employee.getId().equals(e.getId()));
         store.add(employee);
     }
 
-    public Employee findById(String id) {
-        if (id == null) return null;
-        for (int i = 0; i < store.size(); i++) {
-            Employee e = store.get(i);
-            if (id.equals(e.getId())) return e;
-        }
-        return null;
+    @Override
+    public Optional<Employee> findById(String id) {
+        if (id == null) return Optional.empty();
+        return store.stream()
+                .filter(e -> id.equals(e.getId()))
+                .findFirst();
     }
 
+    @Override
     public List<Employee> findAll() {
-        return new ArrayList<Employee>(store);
+        return Collections.unmodifiableList(new ArrayList<>(store));
     }
 }
