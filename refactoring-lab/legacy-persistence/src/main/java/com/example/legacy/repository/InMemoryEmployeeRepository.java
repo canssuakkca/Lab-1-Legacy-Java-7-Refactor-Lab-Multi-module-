@@ -11,7 +11,7 @@ public class InMemoryEmployeeRepository implements EmployeeRepository {
     @Override
     public void save(Employee employee) {
         if (employee == null || employee.getId() == null) return;
-        
+
         store.removeIf(e -> employee.getId().equals(e.getId()));
         store.add(employee);
     }
